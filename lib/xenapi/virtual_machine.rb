@@ -204,8 +204,7 @@ module XenAPI
       file = File.open(options[:to], "wb")
       session_ref = hypervisor_session.key
       task_ref = hypervisor_session.task.create "export vm #{self.uuid}", "export job"
-      master_ref = hypervisor_session.pool.master
-      master_address = hypervisor_session.host.get_address master_ref
+
       path = "/export?session_id=#{session_ref}&task_id=#{task_ref}&ref=#{self.ref}"
       uri  = URI.parse "http://#{master_address}#{path}"
 
@@ -225,8 +224,7 @@ module XenAPI
       session_ref = hypervisor_session.key
       storage_ref = storage_uuid ? hypervisor_session.SR.get_by_uuid(storage_uuid) : ""
       task_ref = hypervisor_session.task.create "import vm #{file_path}", "importat job"
-      master_ref = hypervisor_session.pool.master
-      master_address = hypervisor_session.host.get_address master_ref
+
       path = "/import?session_id=#{session_ref}&task_id=#{task_ref}&sr_id=#{storage_ref}"
 
       http = Net::HTTP.new(master_address, 80)
@@ -259,6 +257,12 @@ module XenAPI
     rescue => e
       eject_iso_cd
       raise e
+    end
+
+    def master_address
+      pool_ref = hypervisor_session.pool.get_all.first
+      master_ref = hypervisor_session.pool.get_master
+      hypervisor_session.host.get_address master_ref
     end
   end
 end
