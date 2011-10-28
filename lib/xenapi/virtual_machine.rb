@@ -261,7 +261,7 @@ module XenAPI
 
     def master_address
       pool_ref = hypervisor_session.pool.get_all.first
-      master_ref = hypervisor_session.pool.get_master
+      master_ref = hypervisor_session.pool.get_master pool_ref
       hypervisor_session.host.get_address master_ref
     end
   end
