@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["fabiokung"]
   s.email       = ["fabio.kung@gmail.com"]
-  s.homepage    = "www.locaweb.com.br"
+  s.homepage    = "http://www.locaweb.com.br"
   s.description = %Q{A simple gem to deal with Xen API}
   s.summary     = s.description
 
