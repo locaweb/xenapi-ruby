@@ -1,0 +1,4 @@
+xenapi:
+  xenurl: "https://127.0.0.1"
+  user: "root"
+  password: "My4w3s0m3P455w0rd"
