@@ -4,6 +4,10 @@ module XenAPI
       hypervisor_session.VM.get_name_label(self.ref)
     end
 
+    def name_label=(name)
+      hypervisor_session.VM.set_name_label(self.ref, name)
+    end
+
     def tools_outdated?
       guest_ref = hypervisor_session.VM.get_guest_metrics(ref)
       guest_ref == "OpaqueRef:NULL" || !hypervisor_session.VM_guest_metrics.get_PV_drivers_up_to_date(guest_ref)
