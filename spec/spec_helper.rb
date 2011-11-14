@@ -6,5 +6,9 @@ require 'xenapi-ruby'
 
 ::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:verify_mode] = ::OpenSSL::SSL::VERIFY_NONE
 
+# Requiring all support files
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
+
 RSpec.configure do |config|
+  config.include(Mock::XenAPIMockery)
 end
