@@ -5,12 +5,8 @@ module XenAPI
       self.SR.get_by_uuid(uuid)
     end
 
-    def storage_record_by_ref(ref)
-      self.SR.get_record ref
-    end
-
-    def storage_record(uuid)
-      @record ||= self.SR.get_record storage_ref(uuid)
+    def storage_record(ref)
+      @record ||= self.SR.get_record(ref)
     end
 
     def storage_name(uuid)
