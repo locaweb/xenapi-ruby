@@ -2,7 +2,7 @@
 module XenAPI
   module Vdb
     def create_VDB_for(disk_object)
-      on_hypervisor.VBD.create({
+      self.VBD.create({
         :VM => disk.virtual_machine.ref,
         :VDI => disk.ref,
         :userdevice => disk.number.to_s,

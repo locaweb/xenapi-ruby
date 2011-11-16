@@ -2,9 +2,9 @@
 module XenAPI
   module Vdi
     def create_VDI_for(vm_object, vdi_number)
-      storage_ref = on_hypervisor.SR.get_by_uuid(self.uuid)
+      storage_ref = self.SR.get_by_uuid(self.uuid)
 
-      vdi_ref = on_hypervisor.VDI.create({
+      vdi_ref = self.VDI.create({
         :name_label => "#{vm.name} DISK #{vdi_number}",
         :name_description => name_label,
         :SR => storage_ref,
@@ -18,7 +18,7 @@ module XenAPI
         :tags => []
       })
 
-      on_hypervisor.VDI.get_record(vdi_ref)["uuid"]
+      self.VDI.get_record(vdi_ref)["uuid"]
     end
   end
 end
