@@ -9,6 +9,10 @@ module XenAPI
       self.SR.get_record(ref)
     end
 
+    def storage_record_by_uuid(uuid)
+      self.SR.get_by_uuid(uuid)
+    end
+
     def storage_name(uuid)
       self.SR.get_name_label storage_ref(uuid)
     end

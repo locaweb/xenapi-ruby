@@ -10,6 +10,10 @@ describe XenAPI::Storage do
     subject.should respond_to(:storage_ref)
   end
 
+  it "should contain the storage_record_by_uuid method" do
+    subject.should respond_to(:storage_record_by_uuid)
+  end
+
   it "should contain the storage_record method" do
     subject.should respond_to(:storage_record)
   end
