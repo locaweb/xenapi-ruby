@@ -3,7 +3,7 @@ module XenAPI
   require 'xenapi/dispatcher'
 
   class Session
-    extend XenAPI::Virtualmachine
+    extend XenAPI::VirtualMachine
     extend XenAPI::Vdi
     extend XenAPI::Vdb
     extend XenAPI::Storage
