@@ -3,10 +3,10 @@ module XenAPI
   module Vdi
     def create_VDI_for(storage_ref, vm_object, vdi_number)
       vdi_ref = self.VDI.create({
-        :name_label => "#{vm.name} DISK #{vdi_number}",
-        :name_description => name_label,
+        :name_label => "#{vm_object.name} DISK #{vdi_number}",
+        :name_description => "#{vm_object.name} DISK #{vdi_number}",
         :SR => storage_ref,
-        :virtual_size => (vm.hdd - vm.hdd_size).gigabytes.to_s,
+        :virtual_size => (vm_object.hdd - vm_object.hdd_size).gigabytes.to_s,
         :type => "system",
         :sharable => false,
         :read_only => false,
