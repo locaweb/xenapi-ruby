@@ -1,5 +1,19 @@
 module XenAPI
   module VirtualMachine
+    def vm_ref(uuid)
+      self.VM.get_by_uuid(uuid)
+    end
+
+    def vm_record(ref)
+      self.VM.get_record(ref)
+    end
+
+    def vm_clone(ref_to_clone, name)
+      self.VM.clone(ref_to_clone, name)
+    end
+
+    # Compatibility code
+
     def name_label
       on_hypervisor.VM.get_name_label(self.ref)
     end
