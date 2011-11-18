@@ -3,11 +3,17 @@ module XenAPI
   require 'xenapi/dispatcher'
 
   class Session
+    extend XenAPI::Virtualmachine
+    extend XenAPI::Vdi
+    extend XenAPI::Vdb
+    extend XenAPI::Storage
+    extend XenAPI::Task
+    extend XenAPI::Network
+
     attr_reader :key
 
     def initialize(uri, &block)
-      @uri = uri
-      @block = block
+      @uri, @block = uri, block
     end
 
     def login_with_password(username, password, timeout = 1200)
