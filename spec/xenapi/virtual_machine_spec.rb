@@ -22,4 +22,6 @@ describe XenAPI::VirtualMachine do
     @hypervisor_session.should_receive(:get_record).with("OpaqueRef:...")
     subject.vm_record("OpaqueRef:...")
   end
+
+  it "should return verify if the xen tools is outdated"
 end

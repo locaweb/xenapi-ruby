@@ -12,73 +12,15 @@ module XenAPI
       self.VM.clone(ref_to_clone, name)
     end
 
-    # Compatibility code
-
-    def name_label
-      on_hypervisor.VM.get_name_label(self.ref)
-    end
-
-    def name_label=(name)
-      on_hypervisor.VM.set_name_label(self.ref, name)
-    end
-
-    def tools_outdated?
-      guest_ref = on_hypervisor.VM.get_guest_metrics(ref)
-      guest_ref == "OpaqueRef:NULL" || !on_hypervisor.VM_guest_metrics.get_PV_drivers_up_to_date(guest_ref)
+    def tools_outdated?(ref)
+      guest_ref = self.VM.get_guest_metrics(ref)
+      guest_ref == "OpaqueRef:NULL" || !self.VM_guest_metrics.get_PV_drivers_up_to_date(guest_ref)
     rescue Exception
       false
     end
 
-    def hdd_physical_utilisation
-      vbds.values.inject(0) do |disk_size, vbd_record|
-        disk_size += on_hypervisor.VDI.get_physical_utilisation(vbd_record['VDI']).to_i
-      end / (1024**3) # in GB
-    end
-
-    def hdd_size
-      vbds.values.inject(0) do |disk_size, vbd_record|
-        disk_size += on_hypervisor.VDI.get_virtual_size(vbd_record['VDI']).to_i
-      end / (1024**3) # in GB
-    end
-
-    def set_hdd_size
-      additional_hdd_size = hdd - hdd_size
-      raise "Cannot downgrade disk amount (in #{additional_hdd_size} GB)" if additional_hdd_size < 0
-
-      disk = additional_disks.last
-      raise "Additional disk not found in database, please update" if disk.nil?
-      disk.update_on_hypervisor(disk.size + additional_hdd_size)
-
-      self
-    end
-
-    def vdi_uuid(vdi_ref)
-      on_hypervisor.VDI.get_uuid(vdi_ref)
-    end
-
-    def host_name
-      host_ref = on_hypervisor.VM.get_resident_on(ref)
-      host_name = on_hypervisor.host.get_name_label(host_ref)
-    rescue
-      nil
-    end
-
-    def ref
-      on_hypervisor.VM.get_by_uuid(self.uuid)
-    end
-
-    def remove_disks_from_hypervisor
-      vbds.each_value do |vbd_record|
-        on_hypervisor.VDI.destroy(vbd_record['VDI'])
-      end
-    end
-
-    def remove_machine_from_hypervisor
-      on_hypervisor.VM.destroy(self.ref)
-    end
-
-    def vbds(opts = {})
-      vm_vbds_refs = on_hypervisor.VM.get_record(self.ref)["VBDs"]
+    def vbds(ref, opts = {})
+      vm_vbds_refs = on_hypervisor.VM.get_record(ref)["VBDs"]
 
       vm_vbds_refs.inject({}) do |disks, vm_vbd_ref|
         vm_vbd_record = on_hypervisor.VBD.get_record(vm_vbd_ref)
@@ -90,9 +32,49 @@ module XenAPI
       {}
     end
 
-    def main_vif_ref
-      on_hypervisor.VM.get_VIFs(self.ref).find do |vif_ref|
+    def hdd_physical_utilisation(vm_ref)
+      vbds(vm_ref).values.inject(0) do |disk_size, vbd_record|
+        disk_size += on_hypervisor.VDI.get_physical_utilisation(vbd_record['VDI']).to_i
+      end / (1024**3) # in GB
+    end
+
+    def hdd_size(vm_ref)
+      vbds(vm_ref).values.inject(0) do |disk_size, vbd_record|
+        disk_size += on_hypervisor.VDI.get_virtual_size(vbd_record['VDI']).to_i
+      end / (1024**3) # in GB
+    end
+
+    def vm_main_vif_ref(ref)
+      on_hypervisor.VM.get_VIFs(ref).find do |vif_ref|
         on_hypervisor.VIF.get_device(vif_ref) == "0"
+      end
+    end
+
+    def vifs(ref)
+      vif_refs = on_hypervisor.VM.get_VIFs(ref)
+      vif_refs.inject({}) do |interfaces, vif_ref|
+        network_ref = on_hypervisor.VIF.get_network(vif_ref)
+        network_label = on_hypervisor.network.get_name_label(network_ref)
+        interfaces[vif_ref] = on_hypervisor.VIF.get_record(vif_ref).merge("network_label" => network_label)
+
+        interfaces
+      end
+    rescue
+      {}
+    end
+
+    # Compatibility code
+
+    def host_name
+      host_ref = on_hypervisor.VM.get_resident_on(ref)
+      host_name = on_hypervisor.host.get_name_label(host_ref)
+    rescue
+      nil
+    end
+
+    def remove_disks_from_hypervisor
+      vbds.each_value do |vbd_record|
+        on_hypervisor.VDI.destroy(vbd_record['VDI'])
       end
     end
 
@@ -182,26 +164,6 @@ module XenAPI
       self
     end
 
-    def tagged_with_deactivated?(vm_ref = nil)
-      vm_ref = self.ref if vm_ref.nil?
-      on_hypervisor.VM.get_tags(vm_ref).include?("DEACTIVATED")
-    rescue XenAPI::Error
-      false
-    end
-
-    def vifs
-      vif_refs = on_hypervisor.VM.get_VIFs(self.ref)
-      vif_refs.inject({}) do |interfaces, vif_ref|
-        network_ref = on_hypervisor.VIF.get_network(vif_ref)
-        network_label = on_hypervisor.network.get_name_label(network_ref)
-        interfaces[vif_ref] = on_hypervisor.VIF.get_record(vif_ref).merge("network_label" => network_label)
-
-        interfaces
-      end
-    rescue
-      {}
-    end
-
     def created_vifs
       vifs.to_a.inject({}) do |map, pair|
         map[pair.last["network_label"]] = pair.first
@@ -209,11 +171,11 @@ module XenAPI
       end
     end
 
-    def configure_network_interfaces_on(vm_clone)
+    def configure_network_interfaces_on(vm_ref)
       log_activity(:debug, "Setting up network interfaces")
-      vif_refs = on_hypervisor.VM.get_VIFs(vm_clone)
+      vif_refs = on_hypervisor.VM.get_VIFs(vm_ref)
       raise "Template doesn't have any network interfaces" if vif_refs.nil? || vif_refs.empty?
-      vif_record = on_hypervisor.VIF.get_record(main_vif_ref)
+      vif_record = on_hypervisor.VIF.get_record(vm_main_vif_ref(vm_ref))
       self.mac = vif_record["MAC"]
     end
 
@@ -223,7 +185,7 @@ module XenAPI
       session_ref = on_hypervisor.key
       task_ref = on_hypervisor.task.create "export vm #{self.uuid}", "export job"
 
-      path = "/export?session_id=#{session_ref}&task_id=#{task_ref}&ref=#{self.ref}"
+      path = "/export?session_id=#{session_ref}&task_id=#{task_ref}&ref=#{self.on_hypervisor.vm_ref}"
       uri  = URI.parse "http://#{master_address}#{path}"
 
       Net::HTTP.get_response(uri) do |res|
