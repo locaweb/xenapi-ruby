@@ -3,12 +3,12 @@ module XenAPI
   require 'xenapi/dispatcher'
 
   class Session
-    extend XenAPI::VirtualMachine
-    extend XenAPI::Vdi
-    extend XenAPI::Vdb
-    extend XenAPI::Storage
-    extend XenAPI::Task
-    extend XenAPI::Network
+    include XenAPI::VirtualMachine
+    include XenAPI::Vdi
+    include XenAPI::Vdb
+    include XenAPI::Storage
+    include XenAPI::Task
+    include XenAPI::Network
 
     attr_reader :key
 
