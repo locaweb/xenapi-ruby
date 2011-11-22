@@ -63,25 +63,16 @@ module XenAPI
       {}
     end
 
-    # Compatibility code
-
-    def host_name
-      host_ref = on_hypervisor.VM.get_resident_on(ref)
-      host_name = on_hypervisor.host.get_name_label(host_ref)
-    rescue
-      nil
-    end
-
-    def remove_disks_from_hypervisor
-      vbds.each_value do |vbd_record|
+    def remove_disks_from_hypervisor(vm_ref)
+      vbds(vm_ref).each_value do |vbd_record|
         on_hypervisor.VDI.destroy(vbd_record['VDI'])
       end
     end
 
-    def next_disk_number
+    def next_disk_number(vm_ref)
       device_map = {}
 
-      vbds(:include_cd => true).each_pair do |vbd_ref, vbd_record|
+      vbds(vm_ref, :include_cd => true).each_pair do |vbd_ref, vbd_record|
         userdevice = vbd_record["userdevice"].to_i
         device_map[userdevice] = vbd_ref
       end
@@ -96,79 +87,23 @@ module XenAPI
       disk_number
     end
 
-    def exists_on_hypervisor?(pool)
-      return false if pool.nil?
-      on_hypervisor.VM.get_by_uuid(uuid)
-      true
-    rescue XenAPI::Error
-      false
-    end
-
-    def set_cpus_size(cpus)
-      cpus = cpus.to_s
-      max_cpus = on_hypervisor.VM.get_VCPUs_max(ref).to_i
-
-      # On upgrade, we want set VCPUS max before VCPUS at startup and vice versa
-      if cpus.to_i > max_cpus
-        on_hypervisor.VM.set_VCPUs_max(ref, cpus)
-        on_hypervisor.VM.set_VCPUs_at_startup(ref, cpus)
-      else
-        on_hypervisor.VM.set_VCPUs_at_startup(ref, cpus)
-        on_hypervisor.VM.set_VCPUs_max(ref, cpus)
-      end
-
-      self
-    end
-
-    def set_memory_size(memory_in_MB)
-      memory_in_MB = memory_in_MB.to_s
-      on_hypervisor.VM.set_memory_limits(ref, memory_in_MB, memory_in_MB, memory_in_MB, memory_in_MB)
-      self
-    end
-
-    def insert_iso_cd(iso)
-      on_hypervisor.VBD.set_bootable(cd_ref, false)
-      on_hypervisor.VBD.insert(cd_ref, iso.iso_ref(self.pool))
-      true
-    end
-
-    def cd_ref
-      vbds(:include_cd => true).each_pair do |ref, record|
+    def cd_ref(vm_ref)
+      vbds(vm_ref, :include_cd => true).each_pair do |ref, record|
         return ref if record["type"] == "CD"
       end
       nil
     end
 
-    def eject_iso_cd
-      on_hypervisor.VBD.eject(cd_ref)
-      on_hypervisor.VM.set_HVM_boot_policy(ref, "") if matrix_machine.paravirtualized?
+    def insert_iso_cd(cd_ref, iso_ref)
+      on_hypervisor.VBD.set_bootable(cd_ref, false)
+      on_hypervisor.VBD.insert(cd_ref, iso_ref)
       true
     end
 
-    def cd_object
-      on_hypervisor.VBD.get_record(cd_ref)
-    end
-
-    def inserted_iso_cd?
-      cd_object["allowed_operations"].include?("eject")
-    rescue
-      false
-    end
-
-    def adjust_vcpu_priority(priority)
-      log_activity(:debug, "Setting up priority")
-      parameters = on_hypervisor.VM.get_VCPUs_params(ref)
-      parameters["weight"] = priority.to_s
-      on_hypervisor.VM.set_VCPUs_params(ref, parameters)
-
-      self
-    end
-
-    def created_vifs
-      vifs.to_a.inject({}) do |map, pair|
-        map[pair.last["network_label"]] = pair.first
-        map
-      end
+    def master_address
+      pool_ref = self.pool.get_all.first
+      master_ref = self.pool.get_master pool_ref
+      self.host.get_address master_ref
     end
 
     def configure_network_interfaces_on(vm_ref)
@@ -178,6 +113,53 @@ module XenAPI
       vif_record = on_hypervisor.VIF.get_record(vm_main_vif_ref(vm_ref))
       self.mac = vif_record["MAC"]
     end
+
+    def exists_on_hypervisor?(uuid)
+      on_hypervisor.VM.get_by_uuid(uuid)
+      true
+    rescue XenAPI::Error
+      false
+    end
+
+    def set_memory_size(vm_ref, memory_in_MB)
+      memory_in_MB = memory_in_MB.to_s
+      on_hypervisor.VM.set_memory_limits(vm_ref, memory_in_MB, memory_in_MB, memory_in_MB, memory_in_MB)
+      self
+    end
+
+    def created_vifs(vm_ref)
+      vifs(vm_ref).to_a.inject({}) do |map, pair|
+        map[pair.last["network_label"]] = pair.first
+        map
+      end
+    end
+
+    def set_cpus_size(vm_ref, cpus)
+      cpus = cpus.to_s
+      max_cpus = on_hypervisor.VM.get_VCPUs_max(vm_ref).to_i
+
+      # On upgrade, we want set VCPUS max before VCPUS at startup and vice versa
+      if cpus.to_i > max_cpus
+        on_hypervisor.VM.set_VCPUs_max(vm_ref, cpus)
+        on_hypervisor.VM.set_VCPUs_at_startup(vm_ref, cpus)
+      else
+        on_hypervisor.VM.set_VCPUs_at_startup(vm_ref, cpus)
+        on_hypervisor.VM.set_VCPUs_max(vm_ref, cpus)
+      end
+
+      self
+    end
+
+    def adjust_vcpu_priority(vm_ref, priority)
+      log_activity(:debug, "Setting up priority")
+      parameters = on_hypervisor.VM.get_VCPUs_params(vm_ref)
+      parameters["weight"] = priority.to_s
+      on_hypervisor.VM.set_VCPUs_params(vm_ref, parameters)
+
+      self
+    end
+
+    # Compatibility code
 
     def export(options = {})
       options = {:to => "/tmp/export_file"}.merge(options)
@@ -227,22 +209,6 @@ module XenAPI
     ensure
       file.close rescue nil
       on_hypervisor.task.destroy(task_ref) rescue nil
-    end
-
-    def inserted_iso_name
-      return nil unless inserted_iso_cd?
-
-      iso_ref = cd_object["VDI"]
-      on_hypervisor.VDI.get_record(iso_ref)["name_label"]
-    rescue => e
-      eject_iso_cd
-      raise e
-    end
-
-    def master_address
-      pool_ref = on_hypervisor.pool.get_all.first
-      master_ref = on_hypervisor.pool.get_master pool_ref
-      on_hypervisor.host.get_address master_ref
     end
   end
 end
