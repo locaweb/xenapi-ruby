@@ -111,7 +111,7 @@ module XenAPI
       vif_refs = self.VM.get_VIFs(vm_ref)
       raise "Template doesn't have any network interfaces" if vif_refs.nil? || vif_refs.empty?
       vif_record = self.VIF.get_record(vm_main_vif_ref(vm_ref))
-      self.mac = vif_record["MAC"]
+      vif_record["MAC"]
     end
 
     def exists_on_hypervisor?(uuid)
