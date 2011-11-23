@@ -175,10 +175,10 @@ module XenAPI
       begin
         http.request(request)
       rescue Errno::ECONNRESET
-        logger.warn "VM import did a connection reset, but does not indicate an error"
+        Rails.logger.warn "VM import did a connection reset, but does not indicate an error"
       rescue Timeout::Error
         error = "Could not import VM due to timeout error: check if your image is valid"
-        logger.error error
+        Rails.logger.error error
         raise error
       end
 
