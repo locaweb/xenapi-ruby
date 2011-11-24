@@ -3,7 +3,7 @@ require "yaml"
 require "xenapi/virtual_machine"
 require "xenapi/storage"
 require "xenapi/vdi"
-require "xenapi/vdb"
+require "xenapi/vbd"
 require "xenapi/task"
 require "xenapi/network"
 

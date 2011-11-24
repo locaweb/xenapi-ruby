@@ -5,7 +5,7 @@ module XenAPI
   class Session
     include XenAPI::VirtualMachine
     include XenAPI::Vdi
-    include XenAPI::Vdb
+    include XenAPI::Vbd
     include XenAPI::Storage
     include XenAPI::Task
     include XenAPI::Network
