@@ -163,10 +163,11 @@ module XenAPI
       file = File.open(file_path, "rb")
 
       session_ref = self.key
-      storage_ref = storage_uuid ? self.SR.get_by_uuid(storage_uuid) : ""
+      storage_ref = storage_uuid ? self.SR.get_by_uuid(storage_uuid) : nil
       task_ref = self.task.create "import vm #{file_path}", "importat job"
 
-      path = "/import?session_id=#{session_ref}&task_id=#{task_ref}&sr_id=#{storage_ref}"
+      path = "/import?session_id=#{session_ref}&task_id=#{task_ref}"
+      path += "&sr_id=#{storage_ref}" if storage_ref
 
       http = Net::HTTP.new(master_address, 80)
       request = Net::HTTP::Put.new(path, {})
