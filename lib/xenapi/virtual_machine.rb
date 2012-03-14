@@ -107,7 +107,6 @@ module XenAPI
     end
 
     def configure_network_interfaces_on(vm_ref)
-      log_activity(:debug, "Setting up network interfaces")
       vif_refs = self.VM.get_VIFs(vm_ref)
       raise "Template doesn't have any network interfaces" if vif_refs.nil? || vif_refs.empty?
       vif_record = self.VIF.get_record(vm_main_vif_ref(vm_ref))
@@ -150,10 +149,9 @@ module XenAPI
       self
     end
 
-    def adjust_vcpu_priority(vm_ref, priority)
-      log_activity(:debug, "Setting up priority")
+    def adjust_vcpu_settings(vm_ref, new_settings)
       parameters = self.VM.get_VCPUs_params(vm_ref)
-      parameters["weight"] = priority.to_s
+      parameters.merge!(new_settings)
       self.VM.set_VCPUs_params(vm_ref, parameters)
 
       self

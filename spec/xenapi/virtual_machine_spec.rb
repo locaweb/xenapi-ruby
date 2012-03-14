@@ -23,5 +23,10 @@ describe XenAPI::VirtualMachine do
     subject.vm_record("OpaqueRef:...")
   end
 
-  it "should return verify if the xen tools is outdated"
+  it "should adjust the vcpu settings for a given hash" do
+    settings = {"weight" => "100", "cap" => "200"}
+    @hypervisor_session.stub(:get_VCPUs_params).and_return({})
+    @hypervisor_session.should_receive(:set_VCPUs_params).with(anything, settings)
+    subject.adjust_vcpu_settings("ref", settings)
+  end
 end
