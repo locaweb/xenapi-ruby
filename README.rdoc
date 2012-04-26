@@ -17,6 +17,10 @@ Usage here
    bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request.
 
+== Contributors
+
+* Fabio Kung
+
 == Copyright
 
 Copyright (c) 2009 Locaweb <development@locaweb.com>. See LICENSE for details.

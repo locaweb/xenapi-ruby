@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.name        = "xenapi-ruby"
   s.version     = XenAPI::Version::STRING
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["fabiokung"]
-  s.email       = ["fabio.kung@gmail.com"]
+  s.authors     = ["Cloud Team"]
+  s.email       = ["willian.molinari@locaweb.com.br"]
   s.homepage    = "http://www.locaweb.com.br"
   s.description = %Q{A simple gem to deal with Xen API}
   s.summary     = s.description
