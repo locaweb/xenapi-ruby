@@ -1,26 +1,27 @@
-= xenapi-ruby
+xenapi-ruby
+===========
 
-xenapi-ruby is a ruby gem to deal with xen api, executing commands acording to your xenserver version api documentation.
+xenapi-ruby is a ruby gem that provides an easy way to work with Xen hypervisor api.
 
-== Usage
+The main idea behind this gem came from Python XenApi available
+[here](http://pypi.python.org/pypi/XenAPI). But more than just foward the commands
+to Xen we've added some new commands to help on some common tasks.
 
-Usage here
+Usage
+-----
 
-== Note on Patches/Pull Requests
+Install the gem from Rubygems:
 
-* Fork the project.
-* Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a
-  future version unintentionally.
-* Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but
-   bump version in a commit by itself I can ignore when I pull)
-* Send me a pull request.
+        gem install xenapi-ruby
 
-== Contributors
+
+Contributors
+------------
 
 * Fabio Kung
 
-== Copyright
 
-Copyright (c) 2009 Locaweb <development@locaweb.com>. See LICENSE for details.
+Copyright
+---------
+
+Copyright (c) 2012 Locaweb <development@locaweb.com>. See LICENSE for details.
