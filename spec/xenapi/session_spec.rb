@@ -18,7 +18,7 @@ describe XenAPI::Session do
     it "should add a prefix method to it"
   end
 
-  describe "without custom block" do
+  describe "without custom block (needs hypervisor connection)" do
     before do
       subject.login_with_password(@configs["user"], @configs["password"])
     end
@@ -44,7 +44,7 @@ describe XenAPI::Session do
     end
   end
 
-  describe "with custom block" do
+  describe "with custom block (needs hypervisor connection)" do
     subject do
       XenAPI::Session.new(@configs["xenurl"]) do |error, &called_method|
         @called_method = called_method
