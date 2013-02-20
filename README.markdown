@@ -3,9 +3,9 @@ xenapi-ruby
 
 xenapi-ruby is a ruby gem that provides an easy way to work with Xen hypervisor api.
 
-The main idea behind this gem came from Python XenApi available
-[here](http://pypi.python.org/pypi/XenAPI). But more than just foward the commands
-to Xen we've added some new commands to help on some common tasks.
+The goal for this gem is to bring to Ruby the something like the Python XenApi available
+[here](http://pypi.python.org/pypi/XenAPI), but more than just forwarding the commands
+to Xen we've also added some new commands to help on some common tasks.
 
 Usage
 -----
@@ -19,6 +19,8 @@ Contributors
 ------------
 
 * Fabio Kung
+* Thiago Morello
+* Willian Molinari (a.k.a PotHix)
 
 
 Copyright
